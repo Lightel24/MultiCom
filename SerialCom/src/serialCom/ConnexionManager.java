@@ -1,6 +1,7 @@
 package serialCom;
 
-import com.fazecast.jSerialComm.*;
+import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortDataListener;
 
 import main.Fenetre;
 
@@ -102,12 +103,17 @@ public class ConnexionManager {
 		}
 	}
 	
+	public static void waitForAnswer(String message) {
+		SerialListener.waitForAnswer(message);
+	}
+	
 	
 
 	private static class SerialListener implements Runnable{
+		private static volatile String toWait = "";
 
 		@Override
-		public void run() {
+		public synchronized  void run() {
 			String stringBuffer = "";
 			while(Running) {
 				if(portCom.bytesAvailable()>1) {
@@ -118,8 +124,27 @@ public class ConnexionManager {
 				
 					if(!stringBuffer.isEmpty()) {
 						Fenetre.addText(portCom.getSystemPortName()+":  "+stringBuffer);	
-						stringBuffer = "";
+						stringBuffer= stringBuffer.replaceAll("\r", "");
+						stringBuffer= stringBuffer.replaceAll("\n", "");
+						stringBuffer= stringBuffer.replaceAll("\t", "");
+						if(toWait.equals(stringBuffer)) {
+							synchronized (toWait) {
+								toWait.notifyAll();
+							}
+						}
+					stringBuffer = "";
 					}
+			}
+		}
+
+		public synchronized static void waitForAnswer(String message) {
+			toWait = message;
+			try {
+				synchronized (toWait) {
+					toWait.wait();
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}	
 	}
