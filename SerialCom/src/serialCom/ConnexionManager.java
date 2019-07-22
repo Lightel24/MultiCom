@@ -88,6 +88,7 @@ public class ConnexionManager {
 			try {
 				listenerThread.join();
 				writerThread.join();
+				return true;
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
