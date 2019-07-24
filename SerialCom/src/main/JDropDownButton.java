@@ -52,31 +52,33 @@ public class JDropDownButton extends JButton implements MouseListener{
   public void paintComponent(Graphics g){
 	    g.drawString(this.name, this.getWidth() / 2 - (this.getWidth() / 2 /4), (this.getHeight() / 2) + 5);
   }
-  		@Override
-	    public void mousePressed(MouseEvent e) {
-	      checkPopup(e);
+	@Override
+	public void mousePressed(MouseEvent e) {
+	  checkPopup(e);
+	}
+	
+	@Override
+	public void mouseClicked(MouseEvent e) {
+	  checkPopup(e);
+	}
+	
+	@Override
+	public void mouseReleased(MouseEvent e) {
+	  checkPopup(e);
+	}
+	
+	private void checkPopup(MouseEvent e) {
+	    if(this.isEnabled()) {
+	    	popup.show(JDropDownButton.this, e.getX(), e.getY());
 	    }
-  		
-  		@Override
-	    public void mouseClicked(MouseEvent e) {
-	      checkPopup(e);
-	    }
-  		
-  		@Override
-	    public void mouseReleased(MouseEvent e) {
-	      checkPopup(e);
-	    }
-  		
-	    private void checkPopup(MouseEvent e) {
-	        popup.show(JDropDownButton.this, e.getX(), e.getY());
-	    }
-
-	    @Override
-		public void mouseEntered(MouseEvent arg0) {		
-		}
-
-		@Override
-		public void mouseExited(MouseEvent arg0) {
-			
-		}
+	}
+	
+	@Override
+	public void mouseEntered(MouseEvent arg0) {		
+	}
+	
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		
+	}
   }

@@ -10,6 +10,7 @@ import java.awt.event.KeyListener;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -23,6 +24,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import serialCom.ConnexionManager;
+import serialCom.DagoPrint;
 
 public class Fenetre extends JFrame{
 	
@@ -68,9 +70,23 @@ public class Fenetre extends JFrame{
 		
 		/*Cration du JDropDownButton*/
 		JPopupMenu popupMenu = new JPopupMenu();
-		JMenuItem test = new JMenuItem("Test");
-		popupMenu.add(test);
+		JMenuItem dagoPrint = new JMenuItem("Impression GCode");
+		dagoPrint.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				JFileChooser jfc = new JFileChooser();
+				jfc.setMultiSelectionEnabled(false);
+				jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				if(jfc.showDialog(ref, "Fichier")==JFileChooser.APPROVE_OPTION) {
+					DagoPrint impression = new DagoPrint(jfc.getSelectedFile());
+					Thread impressionThread = new Thread(impression);
+					impressionThread.start();
+				}
+			}		
+		});
+		popupMenu.add(dagoPrint);
 		JDDBactions = new JDropDownButton("Actions",popupMenu);
+		JDDBactions.setEnabled(false);
 		//Parametres de la JFrame
 		this.setName("SerialCom");
 		this.setSize(1000, 700);
@@ -141,6 +157,7 @@ public class Fenetre extends JFrame{
 							JOptionPane.showMessageDialog(null, "Une erreur est survenu lors de la déconnexion. Esseyez ultèrieurement", "Erreur", JOptionPane .ERROR_MESSAGE);
 						}
 					}
+					JDDBactions.setEnabled(!stateJBcon);
 				}			
 			});
 		

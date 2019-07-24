@@ -5,7 +5,7 @@ import com.fazecast.jSerialComm.SerialPortDataListener;
 
 import main.Fenetre;
 
-public class ConnexionManager {
+public abstract class ConnexionManager {
 	
 	protected static SerialPort portCom;
 	protected static SerialListener listener;
