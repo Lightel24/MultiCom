@@ -2,14 +2,10 @@ package main;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Desktop;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -20,6 +16,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
@@ -43,7 +40,9 @@ public class Fenetre extends JFrame{
 	
 	private JPanel JPcon = new JPanel();
 	String[] choix;
+	String[] actions = new String[]{"Envoi GCode"};
 	private JComboBox JCBcom;
+	private JDropDownButton JDDBactions;
 	private JButton JBcon = new JButton("Connexion");
 	private boolean stateJBcon = true;
 	
@@ -58,7 +57,7 @@ public class Fenetre extends JFrame{
 		do {
 		choix = ConnexionManager.getAvailiblePortNames();
 			if(choix.length<=0) {
-				int rep = JOptionPane.showConfirmDialog(ref, "Pas de port detectés", "Erreur", JOptionPane.CANCEL_OPTION,JOptionPane.ERROR_MESSAGE);
+				int rep = JOptionPane.showConfirmDialog(ref, "Pas de port actif detectés", "Erreur", JOptionPane.CANCEL_OPTION,JOptionPane.ERROR_MESSAGE);
 				if(rep!=JOptionPane.OK_OPTION) {
 					System.exit(0);
 				}
@@ -66,6 +65,13 @@ public class Fenetre extends JFrame{
 		}while(choix.length<=0);
 
 		JCBcom = new JComboBox(choix);
+		
+		/*Cration du JDropDownButton*/
+		JPopupMenu popupMenu = new JPopupMenu();
+		JMenuItem test = new JMenuItem("Test");
+		popupMenu.add(test);
+		JDDBactions = new JDropDownButton("Actions",popupMenu);
+		//Parametres de la JFrame
 		this.setName("SerialCom");
 		this.setSize(1000, 700);
 		this.setLocationRelativeTo(null);
@@ -141,10 +147,12 @@ public class Fenetre extends JFrame{
 		
 		JPcon.add(JCBcom);
 		JPcon.add(JBcon);
+		JPcon.add(JDDBactions);
 		JPcon.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 		//Ajout JPanel dans other
 		other.setLayout(new BorderLayout());
 		other.add(JPcon, BorderLayout.NORTH);
+		
 		
 		
 		/*
