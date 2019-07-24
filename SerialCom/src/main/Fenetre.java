@@ -142,7 +142,7 @@ public class Fenetre extends JFrame{
 				public void actionPerformed(ActionEvent e) {
 					
 					if(stateJBcon){ //true = boutton affiche connexion
-						if(ConnexionManager.connect(choix[JCBcom.getSelectedIndex()])) {
+						if(true) {//ConnexionManager.connect(choix[JCBcom.getSelectedIndex()])
 							JBcon.setText("Deconnexion");
 							stateJBcon = !stateJBcon;
 						}else{
@@ -150,7 +150,7 @@ public class Fenetre extends JFrame{
 						}
 						
 					}else{
-						if(ConnexionManager.close()) {
+						if(ConnexionManager.close(new Object())) {
 							JBcon.setText("Connexion");
 							stateJBcon = !stateJBcon;
 						}else{
