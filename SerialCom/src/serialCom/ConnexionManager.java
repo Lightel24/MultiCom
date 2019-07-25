@@ -9,19 +9,17 @@ import com.fazecast.jSerialComm.SerialPortDataListener;
 public abstract class ConnexionManager {
 	private static HashMap<String,Connexion> Connections = new HashMap<String,Connexion>();
 	
-	
-	public static boolean connect(int nbr){
-		Connexion nouv = new Connexion();
-		if(nouv.connect(nbr)) {
-			Connections.put(new String("COM"+nbr),nouv);
+	public static boolean connectSerial(String nom){
+		Connexion nouv = new SerialConnexion();
+		if( nouv.connect(nom)) {
+			Connections.put(nom,nouv);
 			return true;
 		}
 		return false;
 	}
 	
-	
-	public static boolean connect(String nom){
-		Connexion nouv = new Connexion();
+	public static boolean connectSocket(String nom){
+		Connexion nouv = new SocketConnexion();
 		if( nouv.connect(nom)) {
 			Connections.put(nom,nouv);
 			return true;
@@ -59,7 +57,9 @@ public abstract class ConnexionManager {
 	}
 	
 	public static void addDataListener(String key,SerialPortDataListener listener) {
-		Connections.get(key).addDataListener(listener);
+		if(Connections.get(key) instanceof SerialConnexion) {
+			((SerialConnexion)Connections.get(key)).addDataListener(listener);
+		}
 	}
 	
 	public static void waitForAnswer(String key,String message) {
