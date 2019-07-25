@@ -91,7 +91,7 @@ public class SerialConnexion extends Connexion{
 		private volatile String toWait = "";
 
 		@Override
-		public synchronized  void run() {
+		public void run() {
 			String stringBuffer = "";
 			while(Running) {
 				if(portCom.bytesAvailable()>1) {
@@ -106,8 +106,8 @@ public class SerialConnexion extends Connexion{
 						stringBuffer= stringBuffer.replaceAll("\n", "");
 						stringBuffer= stringBuffer.replaceAll("\t", "");
 						if(toWait.equals(stringBuffer)) {
-							synchronized (toWait) {
-								toWait.notifyAll();
+							synchronized (this) {
+								this.notifyAll();
 							}
 						}
 					stringBuffer = "";
@@ -118,8 +118,8 @@ public class SerialConnexion extends Connexion{
 		public synchronized void waitForAnswer(String message) {
 			toWait = message;
 			try {
-				synchronized (toWait) {
-					toWait.wait();
+				synchronized (this) {
+					this.wait();
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
