@@ -12,6 +12,7 @@ import java.awt.event.KeyListener;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -44,8 +45,6 @@ public class Fenetre extends JFrame{
 	private JTextField JTFenter = new JTextField();
 	private JButton JBsend = new JButton("Envoyer");
 	
-	String[] ports;
-	String[] actions = new String[]{"Envoi GCode"};
 	
 	private JMenuBar menuBar = new JMenuBar();
 	
@@ -57,6 +56,7 @@ public class Fenetre extends JFrame{
 	public String currentConnection;
 	
 	public Fenetre() {
+		String[] ports;
 		do {
 			ports = ConnexionManager.getAvailiblePortNames();
 			if(ports.length<=0) {
@@ -71,7 +71,7 @@ public class Fenetre extends JFrame{
 //		ports = new String[]{"COM3","COM4"};	//DEBUG
 		
 		//Parametres de la JFrame
-		this.setName("SerialCom");
+		this.setTitle("SerialCom");
 		this.setSize(1000, 700);
 		this.setLocationRelativeTo(null);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -81,7 +81,7 @@ public class Fenetre extends JFrame{
 		//Création des multiples UI de connection
 		for(int i=0;i<ports.length;i++) {
 			JRadioButton select = new JRadioButton("Selectionné");
-			ConnectionPanel panel = new ConnectionPanel(ports[i],select);
+			SerialConnectionPanel panel = new SerialConnectionPanel(ports[i],select);
 			bg.add(select);
 	        other.add(panel);
 		}
@@ -186,11 +186,11 @@ public class Fenetre extends JFrame{
 		Component[] comp = other.getComponents();
 		
 		for(Component panel:comp) {
-			if(panel instanceof ConnectionPanel) {
-				if(((ConnectionPanel) panel).getPortName().equals(currentConnection)) {
-					((ConnectionPanel) panel).updateButtonState(true);
+			if(panel instanceof SerialConnectionPanel) {
+				if(((SerialConnectionPanel) panel).getPortName().equals(currentConnection)) {
+					((SerialConnectionPanel) panel).updateButtonState(true);
 				}else {
-					((ConnectionPanel) panel).updateButtonState(false);
+					((SerialConnectionPanel) panel).updateButtonState(false);
 				}
 			}
 		}
@@ -201,38 +201,40 @@ public class Fenetre extends JFrame{
 	}
 	
 	
-	public class ConnectionPanel extends JPanel {
+	public class SerialConnectionPanel extends JPanel {
 		
 		protected JLabel JCBcom;
-		protected JDropDownButton JDDBactions;
+		protected JComboBox JDDBactions;
+		protected String[] actions = new String[] {"Impression GCode","Test"};
 		protected JButton JBcon ;
 		protected JPanel ref = this;
 		protected boolean stateJBcon = true;
 
 		
-		public ConnectionPanel(String port, JRadioButton select) {
+		public SerialConnectionPanel(String port, JRadioButton select) {
 			
 			JCBcom = new JLabel(port);
 			JBcon = new JButton("Connexion");
 			
 			/*Création du JDropDownButton*/
-			JPopupMenu popupMenu = new JPopupMenu();
 			JMenuItem dagoPrint = new JMenuItem("Impression GCode");
-			dagoPrint.addActionListener(new ActionListener() {
+			JDDBactions = new JComboBox(actions);
+			JDDBactions.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					JFileChooser jfc = new JFileChooser();
-					jfc.setMultiSelectionEnabled(false);
-					jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-					if(jfc.showDialog(ref.getParent(), "Fichier")==JFileChooser.APPROVE_OPTION) {
-						DagoPrint impression = new DagoPrint(JCBcom.getText(),jfc.getSelectedFile());
-						Thread impressionThread = new Thread(impression);
-						impressionThread.start();
+					if(actions[JDDBactions.getSelectedIndex()].equals(actions[0])) {
+						JFileChooser jfc = new JFileChooser();
+						jfc.setMultiSelectionEnabled(false);
+						jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+						if(jfc.showDialog(ref.getParent(), "Fichier")==JFileChooser.APPROVE_OPTION) {
+							DagoPrint impression = new DagoPrint(JCBcom.getText(),jfc.getSelectedFile());
+							Thread impressionThread = new Thread(impression);
+							impressionThread.start();
+						}
 					}
 				}		
 			});
-			popupMenu.add(dagoPrint);
-			JDDBactions = new JDropDownButton("Actions",popupMenu);
+			JDDBactions.add(dagoPrint);
 			JDDBactions.setEnabled(false);
 			JBcon.setEnabled(false);
 
@@ -258,7 +260,7 @@ public class Fenetre extends JFrame{
 					public void actionPerformed(ActionEvent e) {
 						
 						if(stateJBcon){ //true = boutton affiche connexion
-							if(ConnexionManager.connect(JCBcom.getText())) {
+							if(ConnexionManager.connectSerial(JCBcom.getText())) {
 								JBcon.setText("Deconnexion");
 								stateJBcon = !stateJBcon;
 							}else{
