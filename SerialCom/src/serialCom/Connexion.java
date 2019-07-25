@@ -7,6 +7,7 @@ import main.Fenetre;
 
 public class Connexion {
 
+	public String logs = "";
 	protected SerialPort portCom;
 	protected SerialListener listener;
 	protected SerialWriter writer;
@@ -57,6 +58,10 @@ public class Connexion {
 			return false;
 		}
 	}
+
+	public String getPortName() {
+		return portCom.getSystemPortName();
+	}
 	
 	private void init() {
 		System.out.println("Initialisation du Writer et du Listener...");		
@@ -98,8 +103,15 @@ public class Connexion {
 		listener.waitForAnswer(message);
 	}
 	
+	public void log(String string) {
+		logs+=string;
+		Fenetre.refreshJTA(logs);
+	}
 	
-
+	public String getLogs() {
+		return logs;
+	}
+	
 	private class SerialListener implements Runnable{
 		private volatile String toWait = "";
 
@@ -114,7 +126,7 @@ public class Connexion {
 					}
 				
 					if(!stringBuffer.isEmpty()) {
-						Fenetre.addText(portCom.getSystemPortName()+":  "+stringBuffer);	
+						log(portCom.getSystemPortName()+":  "+stringBuffer);	
 						stringBuffer= stringBuffer.replaceAll("\r", "");
 						stringBuffer= stringBuffer.replaceAll("\n", "");
 						stringBuffer= stringBuffer.replaceAll("\t", "");
@@ -150,7 +162,7 @@ public class Connexion {
 			while(Running) {
 				if(buffer!="") {
 					portCom.writeBytes(buffer.getBytes(), buffer.getBytes().length);
-					Fenetre.addText("SENT: "+buffer+"\n");
+					log("SENT: "+buffer+"\n");
 					buffer = "";
 				}
 			}	

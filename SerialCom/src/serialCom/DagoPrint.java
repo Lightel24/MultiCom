@@ -10,9 +10,11 @@ public class DagoPrint extends Protocole {
 	
 	static boolean operations = false;
 	private File fichier;
+	private String portName;
 	
-	public DagoPrint(File fichier) {
+	public DagoPrint(String portName,File fichier) {
 		this.fichier = fichier;
+		this.portName = portName;
 	}
 	
 	public void run(){
@@ -24,9 +26,9 @@ public class DagoPrint extends Protocole {
 			      String ligne = "";
 			      while ((ligne = br.readLine()) != null){
 			    	  if(!ligne.isEmpty() && !ligne.startsWith(";")) {
-			    		  ConnexionManager.send(ligne);
+			    		  ConnexionManager.send(portName,ligne);
 			    		  System.out.println("Attente de la fin de l'operation...");
-			    		  ConnexionManager.waitForAnswer("ok");
+			    		  ConnexionManager.waitForAnswer(portName,"ok");
 			    		  System.out.println("Opération terminée");
 			    	  }
 			     } 
