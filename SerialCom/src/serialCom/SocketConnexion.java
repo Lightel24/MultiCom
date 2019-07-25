@@ -12,12 +12,12 @@ public class SocketConnexion extends Connexion{
 
 	@Override
 	protected void send(String message) {
-		
+		writer.send(message);
 	}
 
 	@Override
 	protected String getLogs() {
-		return null;
+		return logs;
 	}
 
 	@Override
@@ -32,14 +32,14 @@ public class SocketConnexion extends Connexion{
 	
 	@Override
 	public void log(String string) {
-		
+		logs+=string;
 	}
 	
 	private class SocketListener implements Runnable{
 		private volatile String toWait = "";
 
 		@Override
-		public synchronized  void run() {
+		public void run() {
 			String stringBuffer = "";
 			while(Running) {
 				
@@ -60,7 +60,7 @@ public class SocketConnexion extends Connexion{
 			}
 		}
 
-		public synchronized void waitForAnswer(String message) {
+		public void waitForAnswer(String message) {
 			toWait = message;
 			try {
 				synchronized (toWait) {
