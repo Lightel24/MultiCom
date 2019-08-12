@@ -165,6 +165,13 @@ public class Fenetre extends JFrame{
 			}		
 		});
 		
+		AutoScroll.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				JTAcons.setAutoscrolls(AutoScroll.isSelected());
+			}		
+		});
+		
 		//Appuie sur la touche entrée
 		JTFenter.addKeyListener(new KeyListener() {
 
