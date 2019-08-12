@@ -33,6 +33,11 @@ public class SerialConnexion extends Connexion{
 			return false;
 		}
 	}
+	
+	@Override
+	public boolean connect(String adresse, int port) {
+		return connect(adresse);
+	}
 
 	public String getPortName() {
 		return portCom.getSystemPortName();
@@ -146,6 +151,5 @@ public class SerialConnexion extends Connexion{
 		public void send(String message) {
 			buffer += message;
 		}
-	
 	}
 }

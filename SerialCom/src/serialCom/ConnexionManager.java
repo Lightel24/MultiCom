@@ -18,9 +18,9 @@ public abstract class ConnexionManager {
 		return false;
 	}
 	
-	public static boolean connectSocket(String nom){
+	public static boolean connectSocket(String nom, int port){
 		Connexion nouv = new SocketConnexion();
-		if( nouv.connect(nom)) {
+		if( nouv.connect(nom, port)) {
 			Connections.put(nom,nouv);
 			return true;
 		}

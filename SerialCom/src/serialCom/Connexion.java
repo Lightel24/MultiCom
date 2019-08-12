@@ -13,8 +13,6 @@ public abstract class Connexion {
 	protected Thread writerThread;
 	static boolean Running;
 	
-	public abstract boolean connect(String portName);
-
 	protected abstract void send(String message);
 	
 	public abstract void log(String string);
@@ -24,5 +22,9 @@ public abstract class Connexion {
 	protected abstract void waitForAnswer(String message);
 
 	protected abstract boolean close();
+
+	protected abstract boolean connect(String nom);
+
+	public abstract boolean connect(String adresse, int port);
 
 }
