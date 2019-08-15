@@ -38,6 +38,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
+import serialCom.ConnexionKey;
 import serialCom.ConnexionManager;
 import serialCom.DagoPrint;
 
@@ -54,23 +55,18 @@ public class Fenetre extends JFrame{
 	private JScrollPane scroll;
 	private JScrollPane scrollPane;
 	private JCheckBox AutoScroll;
-	private JPanel JPsend;
 	private JTextField JTFenter;
 	private JButton JBsend;
 	
 	
 	private JMenuBar menuBar = new JMenuBar();
-	
 	private JMenu JMoption = new JMenu("Option");
 	private JMenu JMpropos = new JMenu("A propos");
 	private JMenuItem JMIparam = new JMenuItem("Paramètre");
+	private JMenuItem JMIadd = new JMenuItem("Ajouter");
 	private JMenuItem JMIcredit = new JMenuItem("Credit");
 	
-	public String currentConnection;
-	
-	
-	
-	
+	public ConnexionKey currentConnection;
 	
 	public Fenetre() {
 		initialize();
@@ -116,12 +112,17 @@ public class Fenetre extends JFrame{
         gbc.gridwidth = GridBagConstraints.REMAINDER;
 		Liste.setLayout(new BoxLayout(Liste, BoxLayout.PAGE_AXIS));
 		
+		Component horizontalStrut = Box.createHorizontalStrut(300);
+		horizontalStrut.setMaximumSize(new Dimension(300, 0));
+		Liste.add(horizontalStrut);
+		
 		/*Les multiples connections */
 		ButtonGroup bg = new ButtonGroup();
 		//Création des multiples UI de connection
 		for(int i=0;i<ports.length;i++) {
 			JRadioButton select = new JRadioButton("Selectionné");
-			SerialConnectionPanel panel = new SerialConnectionPanel(ports[i],select);
+			ConnexionPanel panel = new ConnexionPanel(ports[i],select);
+			panel.setSerialConnexion(ports[i]);
 			bg.add(select);
 			Liste.add(panel);
 			Component verticalStrut_1 = Box.createHorizontalStrut(3);
@@ -201,6 +202,30 @@ public class Fenetre extends JFrame{
 			
 		});
 		
+		JMIadd.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				String adresse = JOptionPane.showInputDialog("Adresse de l'hote (vide pour annuler)");
+				if((adresse != null) && (adresse.length() > 0)) {
+					String port = JOptionPane.showInputDialog("Port de l'hote (vide pour annuler)");
+					try{
+						int port1 = Integer.parseInt(port);
+							JRadioButton select = new JRadioButton("Selectionné");
+							ConnexionPanel panel = new ConnexionPanel(adresse+": "+port1,select);
+							panel.setSocketConnexion(adresse, port1);
+							bg.add(select);
+							Liste.add(panel);
+							Component verticalStrut_1 = Box.createHorizontalStrut(3);
+							verticalStrut_1.setMaximumSize(new Dimension(0, 3));
+							Liste.add(verticalStrut_1);
+							Liste.revalidate();
+							Liste.repaint();
+					} catch (NumberFormatException | NullPointerException nfe) {}
+				}
+			}
+			
+		});
+		
 		JMIcredit.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -210,6 +235,7 @@ public class Fenetre extends JFrame{
 		});
 		
 		JMoption.add(JMIparam);
+		JMoption.add(JMIadd);
 		JMpropos.add(JMIcredit);
 		
 		menuBar.add(JMoption);
@@ -219,13 +245,13 @@ public class Fenetre extends JFrame{
 	
 	
 	
-	protected String getSelectedConnectionName() {
+	protected ConnexionKey getSelectedConnectionName() {
 		return currentConnection;
 	}
 	
 	protected void send() {
-		//PROGRAME POUR ENVOYER LA COMMANDE
-		String slected = getSelectedConnectionName();
+		//ENVOYER LA COMMANDE
+		ConnexionKey slected = getSelectedConnectionName();
 		if(slected!=null) {
 		
 		ConnexionManager.send(slected,JTFenter.getText());
@@ -241,22 +267,22 @@ public class Fenetre extends JFrame{
 		Component[] comp = Liste.getComponents();
 		
 		for(Component panel:comp) {
-			if(panel instanceof SerialConnectionPanel) {
-				if(((SerialConnectionPanel) panel).getPortName().equals(currentConnection)) {
-					((SerialConnectionPanel) panel).updateButtonState(true);
+			if(panel instanceof ConnexionPanel && currentConnection!=null) {
+				if(((ConnexionPanel) panel).getID().equals(currentConnection)) {
+					((ConnexionPanel) panel).updateButtonState(true);
 				}else {
-					((SerialConnectionPanel) panel).updateButtonState(false);
+					((ConnexionPanel) panel).updateButtonState(false);
 				}
 			}
 		}
 	}
 	
-	protected void setSelectedCOnnection(String text) {
+	protected void setSelectedCOnnection(ConnexionKey text) {
 		currentConnection = text;		
 	}
 	
 	
-	public class SerialConnectionPanel extends JPanel {
+	public class ConnexionPanel extends JPanel {
 		
 		protected JLabel JCBcom;
 		protected JComboBox JDDBactions;
@@ -264,21 +290,33 @@ public class Fenetre extends JFrame{
 		protected JButton JBcon ;
 		protected JPanel ref = this;
 		protected boolean stateJBcon = true;
+		
+		private ConnexionKey ID;
 
 		
-		public SerialConnectionPanel(String port, JRadioButton select) {
-			
-			
+		public ConnexionPanel(String description, JRadioButton select) {
 			this.setBorder(new EmptyBorder(10, 10, 10, 10));
 			this.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 			this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 			this.add(select);
 			
+			/*Selection des comm*/
+			select.addActionListener(new ActionListener() { 
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					if(select.isSelected()) {
+						setSelectedCOnnection(ID);
+						updateAllConectionPanel();
+						Fenetre.refreshJTA(ConnexionManager.getLogs(ID));
+					}
+				}	
+			});
+			
 			Component horizontalStrut = Box.createHorizontalStrut(10);
 			horizontalStrut.setMaximumSize(new Dimension(20, 0));
 			this.add(horizontalStrut);
 			
-			JCBcom = new JLabel(port);
+			JCBcom = new JLabel(description);
 			JCBcom.setBorder(new EmptyBorder(0, 0, 0, 0));
 			JCBcom.setOpaque(true);
 			this.add(JCBcom);
@@ -287,7 +325,7 @@ public class Fenetre extends JFrame{
 			horizontalStrut_1.setMaximumSize(new Dimension(20, 0));
 			this.add(horizontalStrut_1);
 			
-			JBcon = new JButton("Connection");
+			JBcon = new JButton("Connexion");
 			JBcon.setBackground(new Color(255, 228, 181));
 			JBcon.setBorderPainted(false);
 			this.add(JBcon);
@@ -305,7 +343,7 @@ public class Fenetre extends JFrame{
 						jfc.setMultiSelectionEnabled(false);
 						jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 						if(jfc.showDialog(ref.getParent(), "Fichier")==JFileChooser.APPROVE_OPTION) {
-							DagoPrint impression = new DagoPrint(JCBcom.getText(),jfc.getSelectedFile());
+							DagoPrint impression = new DagoPrint(ID,jfc.getSelectedFile());
 							Thread impressionThread = new Thread(impression);
 							impressionThread.start();
 						}
@@ -316,18 +354,6 @@ public class Fenetre extends JFrame{
 			JDDBactions.setEnabled(false);
 			JBcon.setEnabled(false);
 			this.add(JDDBactions);
-
-			/*Selection des comm*/
-			select.addActionListener(new ActionListener() { 
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					if(select.isSelected()) {
-						setSelectedCOnnection(JCBcom.getText());
-						updateAllConectionPanel();
-						Fenetre.refreshJTA(ConnexionManager.getLogs(JCBcom.getText()));
-					}
-				}	
-			});
 			
 			//Connexion
 			
@@ -336,15 +362,14 @@ public class Fenetre extends JFrame{
 				public void actionPerformed(ActionEvent e) {
 					
 					if(stateJBcon){ //true = boutton affiche connexion
-						if(ConnexionManager.connectSerial(JCBcom.getText())) {
-							JBcon.setText("Deconnexion");
-							stateJBcon = !stateJBcon;
-						}else{
-							JOptionPane.showMessageDialog(null, "Une erreur est survenu lors de la connexion. Esseyez ultèrieurement", "Erreur", JOptionPane .ERROR_MESSAGE);
-						}
-						
+							if(ConnexionManager.connect(ID)){
+								JBcon.setText("Deconnexion");
+								stateJBcon = !stateJBcon;
+							}else{
+								JOptionPane.showMessageDialog(null, "Une erreur est survenu lors de la connexion. Esseyez ultèrieurement", "Erreur", JOptionPane .ERROR_MESSAGE);
+							}
 					}else{
-						if(ConnexionManager.close(JCBcom.getText())) {
+						if(ConnexionManager.close(ID)) {
 							JBcon.setText("Connexion");
 							stateJBcon = !stateJBcon;
 						}else{
@@ -354,6 +379,19 @@ public class Fenetre extends JFrame{
 					JDDBactions.setEnabled(!stateJBcon);
 				}			
 			});
+		}
+		
+		public void setSocketConnexion(String adresse,int port) {
+			ID = ConnexionManager.createSocketConnexion(adresse, port);
+		}
+		
+		//Non implémenté
+		public void setServerSocketConnexion(String adresse,int port) {
+		//	ID = ConnexionManager.createServerSocketSocketConnexion(adresse, port);
+		}
+		
+		public void setSerialConnexion(String adresse) {
+			ID = ConnexionManager.createSerialConnexion(adresse);
 		}
 
 		public void updateButtonState(boolean state) {
@@ -366,8 +404,8 @@ public class Fenetre extends JFrame{
 			}
 		}
 
-		public String getPortName() {
-			return JCBcom.getText();
+		public ConnexionKey getID() {
+			return ID;
 		}
 	}
 }

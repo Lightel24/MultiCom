@@ -12,7 +12,7 @@ public class SerialConnexion extends Connexion{
 	protected SerialWriter writer;
 	static boolean Running;
 	
-	public boolean connect(String nom){
+	public boolean connect(String nom, int port){
 		System.out.println("Recherche du port: "+nom);
 		SerialPort[] ports = SerialPort.getCommPorts();
 		String[] noms = ConnexionManager.getAvailiblePortNames();
@@ -34,11 +34,6 @@ public class SerialConnexion extends Connexion{
 		}
 	}
 	
-	@Override
-	public boolean connect(String adresse, int port) {
-		return connect(adresse);
-	}
-
 	public String getPortName() {
 		return portCom.getSystemPortName();
 	}

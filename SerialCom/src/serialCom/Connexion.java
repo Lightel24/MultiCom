@@ -23,8 +23,5 @@ public abstract class Connexion {
 
 	protected abstract boolean close();
 
-	protected abstract boolean connect(String nom);
-
-	public abstract boolean connect(String adresse, int port);
-
+	protected abstract boolean connect(String adresse, int port);
 }

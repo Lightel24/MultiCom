@@ -13,21 +13,10 @@ public class SocketConnexion extends Connexion{
 
 	protected SocketListener listener;
 	protected SocketWriter writer;
-	private String adresse;
 	private Socket socket;
-	private int port;
 
-	@Override
-	protected boolean connect(String nom) {
-		System.err.println("Erreur arguments une connexion socket a besoin d'un port");
-		return false;
-	}
-	
-	@Override
 	public boolean connect(String adresse,int port) {
 		try {
-			this.adresse = adresse;
-			this.port = port;			
 			socket = new Socket(adresse,port);
 		} catch (UnknownHostException e) {
 	        e.printStackTrace();
@@ -101,7 +90,7 @@ public class SocketConnexion extends Connexion{
 				        	 stringBuffer += (char)stream;
 				         }
 						if(!stringBuffer.isEmpty()) {
-							log(adresse+":  "+stringBuffer);	
+							log(socket.getInetAddress().getHostAddress()+":  "+stringBuffer);	
 							stringBuffer= stringBuffer.replaceAll("\r", "");
 							stringBuffer= stringBuffer.replaceAll("\n", "");
 							stringBuffer= stringBuffer.replaceAll("\t", "");

@@ -7,25 +7,26 @@ import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 
 public abstract class ConnexionManager {
-	private static HashMap<String,Connexion> Connections = new HashMap<String,Connexion>();
+	private static HashMap<ConnexionKey,Connexion> Connections = new HashMap<ConnexionKey,Connexion>();
 	
-	public static boolean connectSerial(String nom){
-		Connexion nouv = new SerialConnexion();
-		if( nouv.connect(nom)) {
-			Connections.put(nom,nouv);
-			return true;
-		}
-		return false;
+	public static boolean connect(ConnexionKey key){
+		return Connections.get(key).connect(key.adresse,key.port);
 	}
 	
-	public static boolean connectSocket(String nom, int port){
+	public static ConnexionKey createSocketConnexion(String nom, int port) {
 		Connexion nouv = new SocketConnexion();
-		if( nouv.connect(nom, port)) {
-			Connections.put(nom,nouv);
-			return true;
-		}
-		return false;
+		ConnexionKey key = new ConnexionKey(nom,port);
+		Connections.put(key,nouv);
+		return key;
 	}
+	
+	public static ConnexionKey createSerialConnexion(String nom){
+		Connexion nouv = new SerialConnexion();
+		ConnexionKey key = new ConnexionKey(nom);
+		Connections.put(key,nouv);
+		return key;
+	}
+	
 	
 	public static String[] getAvailiblePortNames() {
 		SerialPort[] ports = SerialPort.getCommPorts();
@@ -36,33 +37,27 @@ public abstract class ConnexionManager {
 		return names;
 	}
 	
-	public static void send(String key,String message) {
+	public static void send(ConnexionKey key,String message) {
 		Connections.get(key).send(message);
 	}
 
-	public static String getLogs(String key) {
+	public static String getLogs(ConnexionKey key) {
 		if(Connections.get(key)==null)
 			return "";
 		return Connections.get(key).getLogs();
 	}
 
-	public static boolean close(String key) {
-		boolean succes = Connections.get(key).close();
-		if(succes) {
-			Connections.remove(key);
-			return true;
-		}else {
-			return false;
-		}
+	public static boolean close(ConnexionKey key) {
+		return Connections.get(key).close();
 	}
 	
-	public static void addDataListener(String key,SerialPortDataListener listener) {
+	public static void addDataListener(ConnexionKey key,SerialPortDataListener listener) {
 		if(Connections.get(key) instanceof SerialConnexion) {
 			((SerialConnexion)Connections.get(key)).addDataListener(listener);
 		}
 	}
 	
-	public static void waitForAnswer(String key,String message) {
+	public static void waitForAnswer(ConnexionKey key,String message) {
 		Connections.get(key).waitForAnswer(message);
 	}
 }
