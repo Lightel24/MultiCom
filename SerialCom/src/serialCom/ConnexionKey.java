@@ -16,6 +16,10 @@ public class ConnexionKey {
 		this.port = NO_PORT_NUMBER;
 	}
 
+	public ConnexionKey(int port) {
+		this.port = port;
+	}
+
 	public String getAdresse() {
 		return adresse;
 	}

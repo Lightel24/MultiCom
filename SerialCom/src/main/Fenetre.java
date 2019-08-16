@@ -205,14 +205,32 @@ public class Fenetre extends JFrame{
 		JMIadd.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				String adresse = JOptionPane.showInputDialog("Adresse de l'hote (vide pour annuler)");
-				if((adresse != null) && (adresse.length() > 0)) {
-					String port = JOptionPane.showInputDialog("Port de l'hote (vide pour annuler)");
+				int rep = JOptionPane.showOptionDialog(ref, "ServerSocket?", "", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+				if(rep!=JOptionPane.YES_OPTION) {
+					String adresse = JOptionPane.showInputDialog("Adresse de l'hote (vide pour annuler)");
+					if((adresse != null) && (adresse.length() > 0)) {
+						String port = JOptionPane.showInputDialog("Port de l'hote (vide pour annuler)");
+						try{
+							int port1 = Integer.parseInt(port);
+								JRadioButton select = new JRadioButton("Selectionné");
+								ConnexionPanel panel = new ConnexionPanel(adresse+": "+port1,select);
+								panel.setSocketConnexion(adresse, port1);
+								bg.add(select);
+								Liste.add(panel);
+								Component verticalStrut_1 = Box.createHorizontalStrut(3);
+								verticalStrut_1.setMaximumSize(new Dimension(0, 3));
+								Liste.add(verticalStrut_1);
+								Liste.revalidate();
+								Liste.repaint();
+						} catch (NumberFormatException | NullPointerException nfe) {}
+					}
+				}else {
+					String port = JOptionPane.showInputDialog("Port du server?");
 					try{
 						int port1 = Integer.parseInt(port);
 							JRadioButton select = new JRadioButton("Selectionné");
-							ConnexionPanel panel = new ConnexionPanel(adresse+": "+port1,select);
-							panel.setSocketConnexion(adresse, port1);
+							ConnexionPanel panel = new ConnexionPanel("(localhost): "+port1,select);
+							panel.setServerSocketConnexion(port1);
 							bg.add(select);
 							Liste.add(panel);
 							Component verticalStrut_1 = Box.createHorizontalStrut(3);
@@ -385,9 +403,8 @@ public class Fenetre extends JFrame{
 			ID = ConnexionManager.createSocketConnexion(adresse, port);
 		}
 		
-		//Non implémenté
-		public void setServerSocketConnexion(String adresse,int port) {
-		//	ID = ConnexionManager.createServerSocketSocketConnexion(adresse, port);
+		public void setServerSocketConnexion(int port) {
+			ID = ConnexionManager.createServerSocketConnexion(port);
 		}
 		
 		public void setSerialConnexion(String adresse) {
