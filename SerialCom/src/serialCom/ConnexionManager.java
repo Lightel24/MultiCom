@@ -20,6 +20,14 @@ public abstract class ConnexionManager {
 		return key;
 	}
 	
+	public static ConnexionKey createServerSocketConnexion(int port) {
+		Connexion nouv = new ServerSocketConnexion();
+		((ServerSocketConnexion)nouv).setServer(port);
+		ConnexionKey key = new ConnexionKey(port);
+		Connections.put(key,nouv);
+		return key;
+	}
+	
 	public static ConnexionKey createSerialConnexion(String nom){
 		Connexion nouv = new SerialConnexion();
 		ConnexionKey key = new ConnexionKey(nom);

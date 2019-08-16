@@ -1,8 +1,11 @@
 package serialCom;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -13,7 +16,8 @@ public class SocketConnexion extends Connexion{
 
 	protected SocketListener listener;
 	protected SocketWriter writer;
-	private Socket socket;
+	protected Socket socket;
+	protected ServerSocket server;
 
 	public boolean connect(String adresse,int port) {
 		try {
@@ -28,7 +32,26 @@ public class SocketConnexion extends Connexion{
  		return socket.isConnected();
 	}
 	
-	private void init() {
+	public void setServer(int port) {
+		try {
+			server = new ServerSocket(port);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public boolean startServer() {
+		try {
+			socket = server.accept();
+			init();
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	protected void init() {
 		System.out.println("Initialisation du Writer et du Listener...");		
 		Running = true;
 		listener = new SocketListener();
@@ -42,7 +65,9 @@ public class SocketConnexion extends Connexion{
 
 	@Override
 	protected void send(String message) {
-		writer.send(message);
+		if(Running) {
+			writer.send(message);
+		}
 	}
 
 	@Override
@@ -52,7 +77,9 @@ public class SocketConnexion extends Connexion{
 
 	@Override
 	protected void waitForAnswer(String message) {
+		if(Running) {
 		listener.waitForAnswer(message);
+		}
 	}
 
 	@Override
@@ -69,14 +96,14 @@ public class SocketConnexion extends Connexion{
 	}
 	
 	@Override
-	public void log(String string) {
+	protected void log(String string) {
 		logs+=string;
 		Fenetre.refreshJTA(logs);
 	}
 	
 	private class SocketListener implements Runnable{
 		private volatile String toWait = "";
-		private BufferedInputStream bis;
+		private BufferedInputStream bis = null;
 
 		@Override
 		public void run() {
@@ -84,23 +111,18 @@ public class SocketConnexion extends Connexion{
 			try {
 				bis = new BufferedInputStream(socket.getInputStream());
 				while(Running) {
-					
-						int stream;
-				         while((stream = bis.read()) != -1){
-				        	 stringBuffer += (char)stream;
-				         }
-						if(!stringBuffer.isEmpty()) {
-							log(socket.getInetAddress().getHostAddress()+":  "+stringBuffer);	
-							stringBuffer= stringBuffer.replaceAll("\r", "");
-							stringBuffer= stringBuffer.replaceAll("\n", "");
-							stringBuffer= stringBuffer.replaceAll("\t", "");
+					 if(bis.available()>0) {
+						 byte[] b = new byte[bis.available()];
+						 int stream = bis.read(b);
+						 stringBuffer = new String(b,0,stream);
+							log(socket.getInetAddress().getHostAddress()+":  "+stringBuffer+"\n");	
 							if(toWait.equals(stringBuffer)) {
 								synchronized (toWait) {
 									toWait.notifyAll();
-								}
 							}
-						stringBuffer = "";
-						}
+						 }
+					stringBuffer = "";
+					}
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -131,7 +153,7 @@ public class SocketConnexion extends Connexion{
 		@Override
 		public void run() {
 			try {
-				out = new PrintWriter(socket.getOutputStream(), true);
+				out = new PrintWriter(socket.getOutputStream());
 				
 				while(Running) {
 					if(buffer!="") {

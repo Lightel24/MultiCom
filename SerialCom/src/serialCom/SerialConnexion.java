@@ -78,7 +78,7 @@ public class SerialConnexion extends Connexion{
 		listener.waitForAnswer(message);
 	}
 	
-	public void log(String string) {
+	protected void log(String string) {
 		logs+=string;
 		Fenetre.refreshJTA(logs);
 	}

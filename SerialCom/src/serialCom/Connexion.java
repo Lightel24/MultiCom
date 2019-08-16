@@ -15,7 +15,7 @@ public abstract class Connexion {
 	
 	protected abstract void send(String message);
 	
-	public abstract void log(String string);
+	protected abstract void log(String string);
 	
 	protected abstract String getLogs();
 
