@@ -6,25 +6,22 @@ import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
-import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -32,7 +29,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -64,6 +60,7 @@ public class Fenetre extends JFrame{
 	private JMenu JMpropos = new JMenu("A propos");
 	private JMenuItem JMIparam = new JMenuItem("Paramètre");
 	private JMenuItem JMIadd = new JMenuItem("Ajouter");
+	private JMenuItem JMIbridge = new JMenuItem("Créer un pont");
 	private JMenuItem JMIcredit = new JMenuItem("Credit");
 	
 	public ConnexionKey currentConnection;
@@ -244,6 +241,43 @@ public class Fenetre extends JFrame{
 			
 		});
 		
+		JMIbridge.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+					String adresse = JOptionPane.showInputDialog("Adresse de l'hote (vide pour annuler)");
+					if((adresse != null) && (adresse.length() > 0)) {
+						String port = JOptionPane.showInputDialog("Port de l'hote (vide pour annuler)");
+						try{
+							int port1 = Integer.parseInt(port);
+							
+							String[] ports = ConnexionManager.getAvailiblePortNames();
+							if(ports.length>0) {
+							String rep = (String) JOptionPane.showInputDialog(null, "Choisir un port série",
+							        "The Choice of a Lifetime", JOptionPane.QUESTION_MESSAGE, null, // Use
+							                                                                        // default
+							                                                                        // icon
+							        ports, // Array of choices
+							        ports[0]); // Initial choice
+							
+									JRadioButton select = new JRadioButton("Selectionné");
+									ConnexionPanel panel = new ConnexionPanel(adresse+": "+port1,select);
+									panel.setBridgeConnexion(adresse, port1, rep);
+									bg.add(select);
+									Liste.add(panel);
+									Component verticalStrut_1 = Box.createHorizontalStrut(3);
+									verticalStrut_1.setMaximumSize(new Dimension(0, 3));
+									Liste.add(verticalStrut_1);
+									Liste.revalidate();
+									Liste.repaint();
+							}else {
+								JOptionPane.showConfirmDialog(ref, "Pas de port série actif detectés", "Erreur", JOptionPane.OK_OPTION,JOptionPane.ERROR_MESSAGE);
+							}
+						} catch (NumberFormatException | NullPointerException nfe) {}
+					}
+			}
+			
+		});
+		
 		JMIcredit.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -254,6 +288,7 @@ public class Fenetre extends JFrame{
 		
 		JMoption.add(JMIparam);
 		JMoption.add(JMIadd);
+		JMoption.add(JMIbridge);
 		JMpropos.add(JMIcredit);
 		
 		menuBar.add(JMoption);
@@ -399,6 +434,10 @@ public class Fenetre extends JFrame{
 			});
 		}
 		
+		public void setBridgeConnexion(String adresse, int port1, String rep) {
+			ID = ConnexionManager.createBridgeConnexion(adresse, port1, rep);
+		}
+
 		public void setSocketConnexion(String adresse,int port) {
 			ID = ConnexionManager.createSocketConnexion(adresse, port);
 		}

@@ -11,17 +11,21 @@ public abstract class Connexion {
 	public String logs = "";
 	protected Thread listenerThread;
 	protected Thread writerThread;
-	static boolean Running;
+	protected boolean Running;
 	
 	protected abstract void send(String message);
 	
-	protected abstract void log(String string);
+	protected void log(String string) {
+		logs+=string;
+		Fenetre.refreshJTA(logs);
+	}
 	
-	protected abstract String getLogs();
-
+	protected String getLogs() {
+		return logs;
+	}
 	protected abstract void waitForAnswer(String message);
 
 	protected abstract boolean close();
 
-	protected abstract boolean connect(String adresse, int port);
+	protected abstract boolean connect();
 }

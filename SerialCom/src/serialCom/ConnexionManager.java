@@ -10,27 +10,33 @@ public abstract class ConnexionManager {
 	private static HashMap<ConnexionKey,Connexion> Connections = new HashMap<ConnexionKey,Connexion>();
 	
 	public static boolean connect(ConnexionKey key){
-		return Connections.get(key).connect(key.adresse,key.port);
+		return Connections.get(key).connect();
 	}
 	
 	public static ConnexionKey createSocketConnexion(String nom, int port) {
-		Connexion nouv = new SocketConnexion();
+		Connexion nouv = new SocketConnexion(nom, port);
 		ConnexionKey key = new ConnexionKey(nom,port);
 		Connections.put(key,nouv);
 		return key;
 	}
 	
 	public static ConnexionKey createServerSocketConnexion(int port) {
-		Connexion nouv = new ServerSocketConnexion();
-		((ServerSocketConnexion)nouv).setServer(port);
+		Connexion nouv = new ServerSocketConnexion(port);
 		ConnexionKey key = new ConnexionKey(port);
 		Connections.put(key,nouv);
 		return key;
 	}
 	
 	public static ConnexionKey createSerialConnexion(String nom){
-		Connexion nouv = new SerialConnexion();
+		Connexion nouv = new SerialConnexion(nom);
 		ConnexionKey key = new ConnexionKey(nom);
+		Connections.put(key,nouv);
+		return key;
+	}
+	
+	public static ConnexionKey createBridgeConnexion(String socketAdresse, int port, String serialPortName){
+		Connexion nouv = new BridgeConnexion(socketAdresse, port, serialPortName);
+		ConnexionKey key = new ConnexionKey(socketAdresse, port, serialPortName);
 		Connections.put(key,nouv);
 		return key;
 	}

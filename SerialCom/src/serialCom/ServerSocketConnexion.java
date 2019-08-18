@@ -8,8 +8,17 @@ import java.net.UnknownHostException;
 
 public class ServerSocketConnexion extends SocketConnexion{
 
+	public ServerSocketConnexion(int port) {
+		super("localhost", port);
+		try {
+			server = new ServerSocket(port);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	@Override
-	public boolean connect(String adresse,int port) {
+	public boolean connect() {
 		try {
 			socket = server.accept();
 		} catch (UnknownHostException e) {
@@ -20,13 +29,5 @@ public class ServerSocketConnexion extends SocketConnexion{
 	     }
 		init();
  		return socket.isConnected();
-	}
-	
-	public void setServer(int port) {
-		try {
-			server = new ServerSocket(port);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 }

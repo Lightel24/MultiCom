@@ -10,9 +10,14 @@ public class SerialConnexion extends Connexion{
 	protected SerialPort portCom;
 	protected SerialListener listener;
 	protected SerialWriter writer;
-	static boolean Running;
 	
-	public boolean connect(String nom, int port){
+	private String nom;
+	
+	public SerialConnexion(String nom) {
+		this.nom = nom;
+	}
+
+	public boolean connect(){
 		System.out.println("Recherche du port: "+nom);
 		SerialPort[] ports = SerialPort.getCommPorts();
 		String[] noms = ConnexionManager.getAvailiblePortNames();

@@ -18,8 +18,16 @@ public class SocketConnexion extends Connexion{
 	protected SocketWriter writer;
 	protected Socket socket;
 	protected ServerSocket server;
+	
+	private String adresse;
+	private int port;
 
-	public boolean connect(String adresse,int port) {
+	public SocketConnexion(String adresse, int port) {
+		this.adresse = adresse;
+		this.port = port;
+	}
+
+	public boolean connect() {
 		try {
 			socket = new Socket(adresse,port);
 		} catch (UnknownHostException e) {
@@ -30,25 +38,6 @@ public class SocketConnexion extends Connexion{
 	     }
 		init();
  		return socket.isConnected();
-	}
-	
-	public void setServer(int port) {
-		try {
-			server = new ServerSocket(port);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public boolean startServer() {
-		try {
-			socket = server.accept();
-			init();
-			return true;
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return false;
 	}
 	
 	protected void init() {
