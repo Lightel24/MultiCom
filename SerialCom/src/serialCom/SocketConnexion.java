@@ -16,11 +16,10 @@ public class SocketConnexion extends Connexion{
 	protected SocketListener listener;
 	protected SocketWriter writer;
 	protected Socket socket;
-	protected ServerSocket server;
 	
 	private String adresse;
-	protected Timer timer;
 	protected int port;
+	protected Timer timer = new Timer();
 
 	public SocketConnexion(String adresse, int port) {
 		this.adresse = adresse;
@@ -49,9 +48,8 @@ public class SocketConnexion extends Connexion{
 	
 	protected void init() {
 		System.out.println("Initialisation du Writer et du Listener...");		
-		timer = new Timer();
 		Running = true;
-		notifyObserver(States.CONNECTE);
+		timer = new Timer();
 		listener = new SocketListener();
 		writer = new SocketWriter();
 		listenerThread = new Thread(listener);
@@ -59,6 +57,7 @@ public class SocketConnexion extends Connexion{
 		
 		writerThread = new Thread(writer);
 		writerThread.start();
+		notifyObserver(States.CONNECTE);
 	}
 
 	@Override
@@ -84,27 +83,28 @@ public class SocketConnexion extends Connexion{
 	protected boolean close() {
 		try {
 			Running = false;
-			socket.close();
-			listenerThread.join();
-			writerThread.join();
+			if(socket!=null) {
+				socket.close();
+				timer.cancel();
+				timer.purge();
+				listenerThread.join();
+				writerThread.join();
+			}
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
+			return false;
 		}
-		if(Running==false && socket.isClosed() && !listenerThread.isAlive() && !writerThread.isAlive()) {
 			notifyObserver(States.DECONNECTE);
 			return true;
-		}
-		return false;
 	}
 	
 	protected void connexionClosed() {
 		try {
 			Running = false;
 			timer.cancel();
+			timer.purge();
 			socket.close();
-			listenerThread.join();
-			writerThread.join();
-		} catch (IOException | InterruptedException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		notifyObserver(States.ERREUR_COMM);
@@ -126,9 +126,9 @@ public class SocketConnexion extends Connexion{
 						 stringBuffer = new String(b,0,stream);
 						 
 						 /*FILTRAGE DU PING*/
-						 if(stringBuffer.contains(PING)) {
-							stringBuffer = stringBuffer.substring(0, stringBuffer.indexOf(PING)) + stringBuffer.substring(stringBuffer.indexOf(PING)+PING.length());
-						 }
+						 while(stringBuffer.contains(PING)) {
+								stringBuffer = stringBuffer.substring(0, stringBuffer.indexOf(PING)) + stringBuffer.substring(stringBuffer.indexOf(PING)+PING.length());
+							 }
 						 if(stringBuffer.length()>0) {
 							log(socket.getInetAddress().getHostAddress()+":  "+stringBuffer+"\n");	
 							if(toWait.equals(stringBuffer)) {

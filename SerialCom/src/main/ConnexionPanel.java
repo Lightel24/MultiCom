@@ -107,7 +107,7 @@ public class ConnexionPanel extends JPanel implements Observer, Observable{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				
-				if(connecte || etat == States.ATTENTE_CONNEXION){ //true = boutton affiche connexion
+				if(connecte || etat == States.ATTENTE_CONNEXION || etat == States.CONNEXION){ //true = boutton affiche connexion
 					ConnexionManager.close(ID);
 				}else{
 					ConnexionManager.connect(ID);
@@ -149,7 +149,7 @@ public class ConnexionPanel extends JPanel implements Observer, Observable{
 
 	private void updateButtonState() {
 		if(selectionne) {
-			if(etat == States.DECONNECTE || etat == States.ATTENTE_CONNEXION) {
+			if(etat == States.DECONNECTE || etat == States.ATTENTE_CONNEXION || etat == States.CONNEXION) {
 				JBcon.setEnabled(true);				
 			}else {
 				JBcon.setEnabled(connecte);				

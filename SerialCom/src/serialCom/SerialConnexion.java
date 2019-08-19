@@ -19,6 +19,7 @@ public class SerialConnexion extends Connexion{
 	}
 
 	public boolean connect(){
+		notifyObserver(States.CONNEXION);
 		System.out.println("Recherche du port: "+nom);
 		SerialPort[] ports = SerialPort.getCommPorts();
 		String[] noms = ConnexionManager.getAvailiblePortNames();
@@ -33,10 +34,10 @@ public class SerialConnexion extends Connexion{
 		if(portCom!= null && portCom.openPort()) {
 			System.out.println("Connexion établie avec succès!");
 			init();
-			notifyObserver(States.CONNECTE);
 			return true;
 		}else {
 			System.err.println("Erreur la connexion n'a pas été établie.");
+			notifyObserver(States.ERREUR_CONNEXION);
 			return false;
 		}
 	}
@@ -55,6 +56,7 @@ public class SerialConnexion extends Connexion{
 		
 		writerThread = new Thread(writer);
 		writerThread.start();
+		notifyObserver(States.CONNECTE);
 	}
 	
 	public void send(String message) {
