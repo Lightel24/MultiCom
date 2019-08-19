@@ -3,9 +3,11 @@ package serialCom;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import com.fazecast.jSerialComm.SerialPort;
 
@@ -19,7 +21,7 @@ public class BridgeConnexion extends Connexion {
 	protected String adresse;
 	protected int port;
 	protected String nom;
-	
+	protected Timer timer;
 	
 	public BridgeConnexion(String adresse, int port, String nom) {
 		super();
@@ -72,6 +74,7 @@ public class BridgeConnexion extends Connexion {
 		
 		writerThread = new Thread(socketBridge);
 		writerThread.start();
+		timer = new Timer();
 		notifyObserver(States.CONNECTE);
 	}
 	
@@ -84,6 +87,7 @@ public class BridgeConnexion extends Connexion {
 	@Override
 	protected boolean close() {
 		Running = false;
+		timer.cancel();
 		if(portCom.closePort() && !portCom.isOpen()) {
 			try {
 				socket.close();
@@ -101,6 +105,19 @@ public class BridgeConnexion extends Connexion {
 		}
 		return false;
 	}
+
+	protected void connexionClosed() {
+		timer.cancel();
+		Running = false;
+		if(portCom.closePort() && !portCom.isOpen()) {
+				try {
+					socket.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+		notifyObserver(States.ERREUR_COMM);
+	}
 	
 	private class SocketBridge implements Runnable{
 		
@@ -110,20 +127,29 @@ public class BridgeConnexion extends Connexion {
 		public void run() {
 			try {
 				bis = new BufferedInputStream(socket.getInputStream());
+				String stringBuffer;
 				while(Running) {
-					 if(bis.available()>0) {
 						 //Lecture de la socket
-						 
 						 byte[] b = new byte[bis.available()];
 						 int stream = bis.read(b);
-						
-						log(socket.getInetAddress().getHostAddress()+":  "+ new String(b,0,stream)+"\n");	
-						//Ecriture dans le port série
-						portCom.writeBytes(b, stream);
+						 if(b.length>0) {
+							 stringBuffer = new String(b);
+							 if(stringBuffer.contains(PING)) {
+									stringBuffer = stringBuffer.substring(0, stringBuffer.indexOf(PING)) + stringBuffer.substring(stringBuffer.indexOf(PING)+PING.length());
+								 }
+								 if(stringBuffer.length()>0) {
+										log(socket.getInetAddress().getHostAddress()+":  "+ stringBuffer+"\n");	
+							//Ecriture dans le port série
+							portCom.writeBytes(b, stream);
 						 }
+					 } 
 				}
+			} catch (SocketTimeoutException e) {
+				e.printStackTrace();
+				connexionClosed();
 			} catch (IOException e) {
 				e.printStackTrace();
+				connexionClosed();
 			}finally{
 				try {
 					bis.close();
@@ -141,6 +167,20 @@ public class BridgeConnexion extends Connexion {
 		public void run() {
 			try {
 				out = new BufferedOutputStream(socket.getOutputStream());
+				timer.scheduleAtFixedRate(new TimerTask() {
+					@Override
+					  public void run() {
+						try {
+							if(!socket.isClosed()) {
+								out.write(new String(PING).getBytes());
+								out.flush();
+							}
+						} catch (IOException e) {
+							e.printStackTrace();
+							connexionClosed();
+						}
+					  }
+				}, 2*1000, 2*1000);
 				
 				while(Running) {
 					if(portCom.bytesAvailable()>1) {
@@ -156,6 +196,7 @@ public class BridgeConnexion extends Connexion {
 			
 			} catch (IOException e) {
 				e.printStackTrace();
+				connexionClosed();
 			}finally{
 				try {
 					out.close();

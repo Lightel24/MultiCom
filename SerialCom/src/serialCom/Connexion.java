@@ -12,7 +12,9 @@ public abstract class Connexion implements Observable{
 	public static enum States{
 		ATTENTE_CONNEXION,CONNECTE,DECONNECTE,CONNEXION,LOG,ERREUR_CONNEXION,ERREUR_COMM,ERREUR_CONSTRUCTEUR;
 	}
-
+	
+	protected static final String PING = "$$ping$$";
+	
 	protected ArrayList<Observer> observers = new ArrayList<Observer>();
 	protected String logs = "";
 	protected Thread listenerThread;

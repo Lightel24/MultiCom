@@ -59,7 +59,6 @@ public class Fenetre extends JFrame implements Observer{
 	private JTextField JTFenter;
 	private JButton JBsend;
 	
-	
 	private JMenuBar menuBar = new JMenuBar();
 	private JMenu JMoption = new JMenu("Option");
 	private JMenu JMpropos = new JMenu("A propos");
@@ -72,6 +71,7 @@ public class Fenetre extends JFrame implements Observer{
 	private JMenuItem JMIcredit = new JMenuItem("Credit");
 	
 	public ConnexionKey currentConnection;
+	private boolean autoScroll = false;
 	
 	public Fenetre() {
 		initialize();
@@ -82,13 +82,13 @@ public class Fenetre extends JFrame implements Observer{
 	private void initialize() {
 		String[] ports = ConnexionManager.getAvailiblePortNames();
 		if(ports.length<=0) {
-			int rep = JOptionPane.showConfirmDialog(ref, "Pas de port série actif detectés", "Erreur", JOptionPane.CANCEL_OPTION,JOptionPane.ERROR_MESSAGE);
+			int rep = JOptionPane.showConfirmDialog(ref, "Pas de port série actif detectés", "Erreur", JOptionPane.CANCEL_OPTION,JOptionPane.WARNING_MESSAGE);
 			if(rep!=JOptionPane.OK_OPTION) {
 				System.exit(0);
 			}
 		}
 
-		ports = new String[]{"COM3","COM4"};	//DEBUG
+//		ports = new String[]{"COM3","COM4"};	//DEBUG
 			
 		ref = this;
 		this.setTitle("MultiCom");
@@ -175,7 +175,8 @@ public class Fenetre extends JFrame implements Observer{
 		AutoScroll.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				JTAcons.setAutoscrolls(AutoScroll.isSelected());
+				autoScroll = !autoScroll;
+				JTAcons.setAutoscrolls(autoScroll);
 			}		
 		});
 		
@@ -359,17 +360,16 @@ public class Fenetre extends JFrame implements Observer{
 		//ENVOYER LA COMMANDE
 		ConnexionKey slected = getSelectedConnectionName();
 		if(slected!=null) {
-		
 		ConnexionManager.send(slected,JTFenter.getText());
 		JTFenter.setText("");
 		}
 	}
 
-	public void refreshJTA(String str) {
+	private void refreshJTA(String str) {
 		JTAcons.setText(str);
 	}
 	
-	public void updateAllConectionPanel() {
+	private void updateAllConectionPanel() {
 		Component[] comp = Liste.getComponents();
 		
 		for(Component panel:comp) {

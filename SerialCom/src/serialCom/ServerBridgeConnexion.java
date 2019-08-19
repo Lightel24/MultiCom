@@ -14,6 +14,10 @@ public class ServerBridgeConnexion extends BridgeConnexion {
 	
 	public ServerBridgeConnexion(int port, String nom) {
 		super("localhost", port, nom);
+		bind();
+	}
+
+	protected void bind() {
 		try {
 			server = new ServerSocket(port);
 		} catch (IOException e) {
@@ -28,7 +32,7 @@ public class ServerBridgeConnexion extends BridgeConnexion {
 				 @Override public void run () {
 						try {
 							socket = server.accept();
-							
+							socket.setSoTimeout(1000);
 							//Connexion du port série
 							System.out.println("Recherche du port: "+nom);
 							SerialPort[] ports = SerialPort.getCommPorts();
@@ -81,5 +85,22 @@ public class ServerBridgeConnexion extends BridgeConnexion {
 			e.printStackTrace();
 		}
 		return false;
+	}
+	
+	@Override
+	protected void connexionClosed() {
+		Running = false;
+		timer.cancel();
+		try {
+			if(portCom.closePort() && !portCom.isOpen()) {
+				server.close();
+					
+				log("ATTENTION: Le client a été déconnecté\nLe serveur va maintenant attendre une nouvelle connexion\n");
+				bind();
+				connect();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

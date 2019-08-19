@@ -13,13 +13,17 @@ public class ServerSocketConnexion extends SocketConnexion{
 
 	public ServerSocketConnexion(int port) {
 		super("localhost", port);
+		bind();
+	}
+	
+	protected void bind() {
 		try {
 			server = new ServerSocket(port);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-
+	
 	@Override
 	public boolean connect() {
 			notifyObserver(States.ATTENTE_CONNEXION);
@@ -59,5 +63,19 @@ public class ServerSocketConnexion extends SocketConnexion{
 			e.printStackTrace();
 		}
 		return false;
+	}
+
+	@Override
+	protected void connexionClosed() {
+		Running = false;
+		timer.cancel();
+		try {
+			server.close();
+			log("ATTENTION: Le client a été déconnecté\nLe serveur va maintenant attendre une nouvelle connexion\n");
+			bind();
+			connect();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }
