@@ -38,8 +38,6 @@ public class BridgeConnexion extends Connexion {
 		new Thread(){
 			 @Override public void run () {
 					try {
-						socket = new Socket(adresse,port);
-						
 						//Connexion du port série
 						System.out.println("Recherche du port: "+nom);
 						SerialPort[] ports = SerialPort.getCommPorts();
@@ -54,8 +52,9 @@ public class BridgeConnexion extends Connexion {
 						}
 						if(portCom!= null && portCom.openPort()) {
 							System.out.println("Connexion établie avec succès!");
+							//Connexion de la socket
+							socket = new Socket(adresse,port);
 							init();
-							notifyObserver(States.CONNECTE);
 						}else {
 							System.err.println("Erreur la connexion n'a pas été établie.");
 							notifyObserver(States.ERREUR_CONNEXION);

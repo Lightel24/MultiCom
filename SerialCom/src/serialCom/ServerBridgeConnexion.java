@@ -22,9 +22,6 @@ public class ServerBridgeConnexion extends BridgeConnexion {
 			new Thread(){
 				 @Override public void run () {
 						try {
-							server = new ServerSocket(port);
-							socket = server.accept();
-							socket.setSoTimeout(1000);
 							//Connexion du port série
 							System.out.println("Recherche du port: "+nom);
 							SerialPort[] ports = SerialPort.getCommPorts();
@@ -39,10 +36,12 @@ public class ServerBridgeConnexion extends BridgeConnexion {
 							}
 							if(portCom!= null && portCom.openPort()) {
 								System.out.println("Connexion établie avec succès!");
+								server = new ServerSocket(port);
+								socket = server.accept();
 								init();
 							}else {
 								System.err.println("Erreur la connexion n'a pas été établie.");
-								notifyObserver(States.DECONNECTE);
+								notifyObserver(States.ERREUR_CONNEXION);
 							}
 						}catch (IOException e) {
 							e.printStackTrace();
