@@ -11,7 +11,6 @@ import java.net.UnknownHostException;
 
 import main.Fenetre;
 
-
 public class SocketConnexion extends Connexion{
 
 	protected SocketListener listener;
@@ -27,22 +26,30 @@ public class SocketConnexion extends Connexion{
 		this.port = port;
 	}
 
-	public boolean connect() {
-		try {
-			socket = new Socket(adresse,port);
-		} catch (UnknownHostException e) {
-	        e.printStackTrace();
-	 		return false;
-	     }catch (IOException e) {
-	 		return false;
-	     }
-		init();
- 		return socket.isConnected();
+	public boolean connect() {		
+		notifyObserver(States.CONNEXION);
+		new Thread(){
+			 @Override public void run () {
+					try {
+						socket = new Socket(adresse,port);
+						init();
+						notifyObserver(States.CONNECTE);
+					 } catch (UnknownHostException e) {
+						notifyObserver(States.ERREUR_CONNEXION);
+				        e.printStackTrace();
+				     }catch (IOException e) {
+				     }						
+			 }
+		}.start();
+		
+		
+ 		return true;
 	}
 	
 	protected void init() {
 		System.out.println("Initialisation du Writer et du Listener...");		
 		Running = true;
+		notifyObserver(States.CONNECTE);
 		listener = new SocketListener();
 		writer = new SocketWriter();
 		listenerThread = new Thread(listener);
@@ -67,7 +74,7 @@ public class SocketConnexion extends Connexion{
 	@Override
 	protected void waitForAnswer(String message) {
 		if(Running) {
-		listener.waitForAnswer(message);
+			listener.waitForAnswer(message);
 		}
 	}
 
@@ -81,13 +88,11 @@ public class SocketConnexion extends Connexion{
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
 		}
-		return Running==false && socket.isClosed() && !listenerThread.isAlive() && !writerThread.isAlive() ;
-	}
-	
-	@Override
-	protected void log(String string) {
-		logs+=string;
-		Fenetre.refreshJTA(logs);
+		if(Running==false && socket.isClosed() && !listenerThread.isAlive() && !writerThread.isAlive()) {
+			notifyObserver(States.DECONNECTE);
+			return true;
+		}
+		return false;
 	}
 	
 	private class SocketListener implements Runnable{

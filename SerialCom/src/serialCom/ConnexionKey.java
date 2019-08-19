@@ -26,6 +26,11 @@ public class ConnexionKey {
 		this.serialPortName = serialPortName;
 		this.port = port;	}
 
+	public ConnexionKey(int port, String serialPortName2) {
+		this.port = port;
+		this.serialPortName = serialPortName;
+	}
+
 	public int getPort() {
 		return port;
 	}

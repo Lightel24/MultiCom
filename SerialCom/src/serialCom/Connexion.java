@@ -1,14 +1,20 @@
 package serialCom;
 
-import com.fazecast.jSerialComm.SerialPort;
-import com.fazecast.jSerialComm.SerialPortDataListener;
+import java.util.ArrayList;
 
 import main.Fenetre;
+import observer.Observable;
+import observer.Observer;
 
 
-public abstract class Connexion {
+public abstract class Connexion implements Observable{
 	
-	public String logs = "";
+	public static enum States{
+		ATTENTE_CONNEXION,CONNECTE,DECONNECTE,CONNEXION,LOG,ERREUR_CONNEXION,ERREUR_COMM,ERREUR_CONSTRUCTEUR;
+	}
+
+	protected ArrayList<Observer> observers = new ArrayList<Observer>();
+	protected String logs = "";
 	protected Thread listenerThread;
 	protected Thread writerThread;
 	protected boolean Running;
@@ -17,7 +23,7 @@ public abstract class Connexion {
 	
 	protected void log(String string) {
 		logs+=string;
-		Fenetre.refreshJTA(logs);
+		notifyObserver(States.LOG);
 	}
 	
 	protected String getLogs() {
@@ -28,4 +34,23 @@ public abstract class Connexion {
 	protected abstract boolean close();
 
 	protected abstract boolean connect();
+	
+	public void addObserver(Observer ob) {
+		observers.add(ob);
+	}
+	
+	public void removeObserver(Observer ob) {
+		observers.remove(ob);
+	}
+	
+	@Override
+	public void notifyObserver(States state) {
+		for(Observer obs : observers)
+		      obs.update(state);
+	}
+	
+	@Override
+	public void notifyObserver(ConnexionKey ID) {}
 }
+	
+

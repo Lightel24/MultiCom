@@ -3,6 +3,7 @@ package serialCom;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import main.Fenetre;
+import serialCom.Connexion.States;
 
 
 public class SerialConnexion extends Connexion{
@@ -32,6 +33,7 @@ public class SerialConnexion extends Connexion{
 		if(portCom!= null && portCom.openPort()) {
 			System.out.println("Connexion établie avec succès!");
 			init();
+			notifyObserver(States.CONNECTE);
 			return true;
 		}else {
 			System.err.println("Erreur la connexion n'a pas été établie.");
@@ -60,11 +62,12 @@ public class SerialConnexion extends Connexion{
 	}
 
 	public boolean close() {
-		if(portCom.closePort()) {
+		if(portCom.closePort() && !portCom.isOpen()) {
 			Running = false;
 			try {
 				listenerThread.join();
 				writerThread.join();
+				notifyObserver(States.DECONNECTE);
 				return true;
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -81,11 +84,6 @@ public class SerialConnexion extends Connexion{
 	
 	public void waitForAnswer(String message) {
 		listener.waitForAnswer(message);
-	}
-	
-	protected void log(String string) {
-		logs+=string;
-		Fenetre.refreshJTA(logs);
 	}
 	
 	public String getLogs() {

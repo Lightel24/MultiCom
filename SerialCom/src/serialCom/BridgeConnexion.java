@@ -16,10 +16,9 @@ public class BridgeConnexion extends Connexion {
 	protected SerialBridge serialBridge;
 	protected SocketBridge socketBridge;
 	
-	private String logs;
-	private String adresse;
-	private int port;
-	private String nom;
+	protected String adresse;
+	protected int port;
+	protected String nom;
 	
 	
 	public BridgeConnexion(String adresse, int port, String nom) {
@@ -63,7 +62,7 @@ public class BridgeConnexion extends Connexion {
 		}
 	}
 
-	private void init() {
+	protected void init() {
 		System.out.println("Initialisation du Writer et du Listener...");		
 		Running = true;
 		serialBridge = new SerialBridge();
@@ -73,6 +72,7 @@ public class BridgeConnexion extends Connexion {
 		
 		writerThread = new Thread(socketBridge);
 		writerThread.start();
+		notifyObserver(States.CONNECTE);
 	}
 	
 	@Override
@@ -83,6 +83,22 @@ public class BridgeConnexion extends Connexion {
 
 	@Override
 	protected boolean close() {
+		Running = false;
+		if(portCom.closePort() && !portCom.isOpen()) {
+			try {
+				socket.close();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			try {
+				listenerThread.join();
+				writerThread.join();
+				notifyObserver(States.DECONNECTE);				
+				return true;
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 		return false;
 	}
 	
@@ -111,7 +127,8 @@ public class BridgeConnexion extends Connexion {
 			}finally{
 				try {
 					bis.close();
-				} catch (IOException e) {}
+				} catch (IOException e) {
+				}
 			}
 	}
 	}

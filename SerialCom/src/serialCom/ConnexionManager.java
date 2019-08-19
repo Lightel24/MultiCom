@@ -6,6 +6,8 @@ import java.util.Set;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 
+import observer.Observer;
+
 public abstract class ConnexionManager {
 	private static HashMap<ConnexionKey,Connexion> Connections = new HashMap<ConnexionKey,Connexion>();
 	
@@ -41,6 +43,17 @@ public abstract class ConnexionManager {
 		return key;
 	}
 	
+	public static ConnexionKey createServerBridgeConnexion(int port, String serialPortName) {
+		Connexion nouv = new ServerBridgeConnexion(port, serialPortName);
+		ConnexionKey key = new ConnexionKey(port, serialPortName);
+		Connections.put(key,nouv);
+		return key;
+	}
+	
+	public static void addObserver(ConnexionKey key, Observer ob) {
+		Connections.get(key).addObserver(ob);
+	}
+	
 	
 	public static String[] getAvailiblePortNames() {
 		SerialPort[] ports = SerialPort.getCommPorts();
@@ -73,5 +86,5 @@ public abstract class ConnexionManager {
 	
 	public static void waitForAnswer(ConnexionKey key,String message) {
 		Connections.get(key).waitForAnswer(message);
-	}
+	}	
 }

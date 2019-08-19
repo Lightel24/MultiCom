@@ -32,13 +32,18 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
 
+import observer.Observer;
 import serialCom.ConnexionKey;
 import serialCom.ConnexionManager;
 import serialCom.DagoPrint;
+import serialCom.Connexion.States;
 
-public class Fenetre extends JFrame{
+public class Fenetre extends JFrame implements Observer{
 	
 	private JSplitPane splitPane;	
 	protected JFrame ref = this;
@@ -58,9 +63,12 @@ public class Fenetre extends JFrame{
 	private JMenuBar menuBar = new JMenuBar();
 	private JMenu JMoption = new JMenu("Option");
 	private JMenu JMpropos = new JMenu("A propos");
+	private JMenu JMIadd = new JMenu("Ajouter");
 	private JMenuItem JMIparam = new JMenuItem("Paramètre");
-	private JMenuItem JMIadd = new JMenuItem("Ajouter");
-	private JMenuItem JMIbridge = new JMenuItem("Créer un pont");
+	private JMenuItem JMIserverbridge = new JMenuItem("Un pont serveur");
+	private JMenuItem JMIbridge = new JMenuItem("Un pont client");
+	private JMenuItem JMIaddSocket = new JMenuItem("Un client socket");
+	private JMenuItem JMIaddServerSocket = new JMenuItem("Un serveur socket");
 	private JMenuItem JMIcredit = new JMenuItem("Credit");
 	
 	public ConnexionKey currentConnection;
@@ -79,8 +87,8 @@ public class Fenetre extends JFrame{
 				System.exit(0);
 			}
 		}
-		
-		//ports = new String[]{"COM3","COM4"};	//DEBUG
+
+		ports = new String[]{"COM3","COM4"};	//DEBUG
 			
 		ref = this;
 		this.setTitle("MultiCom");
@@ -120,6 +128,7 @@ public class Fenetre extends JFrame{
 			JRadioButton select = new JRadioButton("Selectionné");
 			ConnexionPanel panel = new ConnexionPanel(ports[i],select);
 			panel.setSerialConnexion(ports[i]);
+			panel.addObserver(this);
 			bg.add(select);
 			Liste.add(panel);
 			Component verticalStrut_1 = Box.createHorizontalStrut(3);
@@ -199,19 +208,18 @@ public class Fenetre extends JFrame{
 			
 		});
 		
-		JMIadd.addActionListener(new ActionListener() {
+		JMIaddSocket.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				int rep = JOptionPane.showOptionDialog(ref, "ServerSocket?", "", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
-				if(rep!=JOptionPane.YES_OPTION) {
-					String adresse = JOptionPane.showInputDialog("Adresse de l'hote (vide pour annuler)");
+				String adresse = JOptionPane.showInputDialog("Adresse de l'hote");
 					if((adresse != null) && (adresse.length() > 0)) {
-						String port = JOptionPane.showInputDialog("Port de l'hote (vide pour annuler)");
+						String port = JOptionPane.showInputDialog("Port de l'hote");
 						try{
 							int port1 = Integer.parseInt(port);
 								JRadioButton select = new JRadioButton("Selectionné");
 								ConnexionPanel panel = new ConnexionPanel(adresse+": "+port1,select);
 								panel.setSocketConnexion(adresse, port1);
+								panel.addObserver(Fenetre.this);
 								bg.add(select);
 								Liste.add(panel);
 								Component verticalStrut_1 = Box.createHorizontalStrut(3);
@@ -221,13 +229,19 @@ public class Fenetre extends JFrame{
 								Liste.repaint();
 						} catch (NumberFormatException | NullPointerException nfe) {}
 					}
-				}else {
+			}});
+		
+		JMIaddServerSocket.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+					
 					String port = JOptionPane.showInputDialog("Port du server?");
 					try{
 						int port1 = Integer.parseInt(port);
 							JRadioButton select = new JRadioButton("Selectionné");
 							ConnexionPanel panel = new ConnexionPanel("(localhost): "+port1,select);
 							panel.setServerSocketConnexion(port1);
+							panel.addObserver(Fenetre.this);
 							bg.add(select);
 							Liste.add(panel);
 							Component verticalStrut_1 = Box.createHorizontalStrut(3);
@@ -237,16 +251,15 @@ public class Fenetre extends JFrame{
 							Liste.repaint();
 					} catch (NumberFormatException | NullPointerException nfe) {}
 				}
-			}
 			
 		});
 		
 		JMIbridge.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-					String adresse = JOptionPane.showInputDialog("Adresse de l'hote (vide pour annuler)");
+					String adresse = JOptionPane.showInputDialog("Adresse de l'hote");
 					if((adresse != null) && (adresse.length() > 0)) {
-						String port = JOptionPane.showInputDialog("Port de l'hote (vide pour annuler)");
+						String port = JOptionPane.showInputDialog("Port de l'hote");
 						try{
 							int port1 = Integer.parseInt(port);
 							
@@ -261,6 +274,7 @@ public class Fenetre extends JFrame{
 							
 									JRadioButton select = new JRadioButton("Selectionné");
 									ConnexionPanel panel = new ConnexionPanel(adresse+": "+port1,select);
+									panel.addObserver(Fenetre.this);
 									panel.setBridgeConnexion(adresse, port1, rep);
 									bg.add(select);
 									Liste.add(panel);
@@ -278,6 +292,41 @@ public class Fenetre extends JFrame{
 			
 		});
 		
+		JMIserverbridge.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+						String port = JOptionPane.showInputDialog("Port du serveur");
+						try{
+							int port1 = Integer.parseInt(port);
+							
+							String[] ports = ConnexionManager.getAvailiblePortNames();
+							if(ports.length>0) {
+							String rep = (String) JOptionPane.showInputDialog(null, "Choisir un port série",
+							        "The Choice of a Lifetime", JOptionPane.QUESTION_MESSAGE, null, // Use
+							                                                                        // default
+							                                                                        // icon
+							        ports, // Array of choices
+							        ports[0]); // Initial choice
+							
+									JRadioButton select = new JRadioButton("Selectionné");
+									ConnexionPanel panel = new ConnexionPanel("(localhost): "+port1,select);
+									panel.addObserver(Fenetre.this);
+									panel.setServerBridgeConnexion(port1, rep);
+									bg.add(select);
+									Liste.add(panel);
+									Component verticalStrut_1 = Box.createHorizontalStrut(3);
+									verticalStrut_1.setMaximumSize(new Dimension(0, 3));
+									Liste.add(verticalStrut_1);
+									Liste.revalidate();
+									Liste.repaint();
+							}else {
+								JOptionPane.showConfirmDialog(ref, "Pas de port série actif detectés", "Erreur", JOptionPane.OK_OPTION,JOptionPane.ERROR_MESSAGE);
+							}
+						} catch (NumberFormatException | NullPointerException nfe) {}
+			}
+			
+		});
+		
 		JMIcredit.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -288,7 +337,11 @@ public class Fenetre extends JFrame{
 		
 		JMoption.add(JMIparam);
 		JMoption.add(JMIadd);
-		JMoption.add(JMIbridge);
+		
+		JMIadd.add(JMIbridge);
+		JMIadd.add(JMIserverbridge);
+		JMIadd.add(JMIaddServerSocket);
+		JMIadd.add(JMIaddSocket);
 		JMpropos.add(JMIcredit);
 		
 		menuBar.add(JMoption);
@@ -312,7 +365,7 @@ public class Fenetre extends JFrame{
 		}
 	}
 
-	public static void refreshJTA(String str) {
+	public void refreshJTA(String str) {
 		JTAcons.setText(str);
 	}
 	
@@ -322,146 +375,22 @@ public class Fenetre extends JFrame{
 		for(Component panel:comp) {
 			if(panel instanceof ConnexionPanel && currentConnection!=null) {
 				if(((ConnexionPanel) panel).getID().equals(currentConnection)) {
-					((ConnexionPanel) panel).updateButtonState(true);
+					((ConnexionPanel) panel).selectionne(true);
 				}else {
-					((ConnexionPanel) panel).updateButtonState(false);
+					((ConnexionPanel) panel).selectionne(false);
 				}
 			}
 		}
 	}
-	
-	protected void setSelectedCOnnection(ConnexionKey text) {
-		currentConnection = text;		
+
+	@Override
+	public void update(ConnexionKey ID) {
+		currentConnection = ID;		
+		updateAllConectionPanel();
+		refreshJTA(ConnexionManager.getLogs(ID));
 	}
 	
+	@Override
+	public void update(States str) {}
 	
-	public class ConnexionPanel extends JPanel {
-		
-		protected JLabel JCBcom;
-		protected JComboBox JDDBactions;
-		protected String[] actions = new String[] {"Impression GCode","Test"};
-		protected JButton JBcon ;
-		protected JPanel ref = this;
-		protected boolean stateJBcon = true;
-		
-		private ConnexionKey ID;
-
-		
-		public ConnexionPanel(String description, JRadioButton select) {
-			this.setBorder(new EmptyBorder(10, 10, 10, 10));
-			this.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
-			this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-			this.add(select);
-			
-			/*Selection des comm*/
-			select.addActionListener(new ActionListener() { 
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					if(select.isSelected()) {
-						setSelectedCOnnection(ID);
-						updateAllConectionPanel();
-						Fenetre.refreshJTA(ConnexionManager.getLogs(ID));
-					}
-				}	
-			});
-			
-			Component horizontalStrut = Box.createHorizontalStrut(10);
-			horizontalStrut.setMaximumSize(new Dimension(20, 0));
-			this.add(horizontalStrut);
-			
-			JCBcom = new JLabel(description);
-			JCBcom.setBorder(new EmptyBorder(0, 0, 0, 0));
-			JCBcom.setOpaque(true);
-			this.add(JCBcom);
-			
-			Component horizontalStrut_1 = Box.createHorizontalStrut(10);
-			horizontalStrut_1.setMaximumSize(new Dimension(20, 0));
-			this.add(horizontalStrut_1);
-			
-			JBcon = new JButton("Connexion");
-			JBcon.setBackground(new Color(255, 228, 181));
-			JBcon.setBorderPainted(false);
-			this.add(JBcon);
-			
-
-			/*Création du JComboBox*/
-			JMenuItem dagoPrint = new JMenuItem("Impression GCode");
-			JDDBactions = new JComboBox(actions);
-			JDDBactions.setMaximumSize(new Dimension(32767, 20));
-			JDDBactions.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent arg0) {
-					if(actions[JDDBactions.getSelectedIndex()].equals(actions[0])) {
-						JFileChooser jfc = new JFileChooser();
-						jfc.setMultiSelectionEnabled(false);
-						jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-						if(jfc.showDialog(ref.getParent(), "Fichier")==JFileChooser.APPROVE_OPTION) {
-							DagoPrint impression = new DagoPrint(ID,jfc.getSelectedFile());
-							Thread impressionThread = new Thread(impression);
-							impressionThread.start();
-						}
-					}
-				}		
-			});
-			JDDBactions.add(dagoPrint);
-			JDDBactions.setEnabled(false);
-			JBcon.setEnabled(false);
-			this.add(JDDBactions);
-			
-			//Connexion
-			
-			JBcon.addActionListener(new ActionListener() { //Bouton connexion/deconnexion --> connect a l'imprimante
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					
-					if(stateJBcon){ //true = boutton affiche connexion
-							if(ConnexionManager.connect(ID)){
-								JBcon.setText("Deconnexion");
-								stateJBcon = !stateJBcon;
-							}else{
-								JOptionPane.showMessageDialog(null, "Une erreur est survenu lors de la connexion. Esseyez ultèrieurement", "Erreur", JOptionPane .ERROR_MESSAGE);
-							}
-					}else{
-						if(ConnexionManager.close(ID)) {
-							JBcon.setText("Connexion");
-							stateJBcon = !stateJBcon;
-						}else{
-							JOptionPane.showMessageDialog(null, "Une erreur est survenu lors de la déconnexion. Esseyez ultèrieurement", "Erreur", JOptionPane .ERROR_MESSAGE);
-						}
-					}
-					JDDBactions.setEnabled(!stateJBcon);
-				}			
-			});
-		}
-		
-		public void setBridgeConnexion(String adresse, int port1, String rep) {
-			ID = ConnexionManager.createBridgeConnexion(adresse, port1, rep);
-		}
-
-		public void setSocketConnexion(String adresse,int port) {
-			ID = ConnexionManager.createSocketConnexion(adresse, port);
-		}
-		
-		public void setServerSocketConnexion(int port) {
-			ID = ConnexionManager.createServerSocketConnexion(port);
-		}
-		
-		public void setSerialConnexion(String adresse) {
-			ID = ConnexionManager.createSerialConnexion(adresse);
-		}
-
-		public void updateButtonState(boolean state) {
-			if(state) {
-				JBcon.setEnabled(true);
-				JDDBactions.setEnabled(!stateJBcon);
-			}else {
-				JBcon.setEnabled(false);
-				JDDBactions.setEnabled(false);
-			}
-		}
-
-		public ConnexionKey getID() {
-			return ID;
-		}
-	}
 }
