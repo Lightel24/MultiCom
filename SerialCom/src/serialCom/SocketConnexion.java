@@ -14,9 +14,9 @@ import java.util.TimerTask;
 public class SocketConnexion extends Connexion{
 
 	protected SocketListener listener;
-	protected SocketWriter writer;
 	protected Socket socket;
-	
+	protected BufferedOutputStream out;
+
 	private String adresse;
 	protected int port;
 	protected Timer timer = new Timer();
@@ -51,20 +51,48 @@ public class SocketConnexion extends Connexion{
 		Running = true;
 		timer = new Timer();
 		listener = new SocketListener();
-		writer = new SocketWriter();
 		listenerThread = new Thread(listener);
 		listenerThread.start();
 		
-		writerThread = new Thread(writer);
-		writerThread.start();
+		try {
+			out = new BufferedOutputStream(socket.getOutputStream());
+		
+		timer.scheduleAtFixedRate(new TimerTask() {
+			@Override
+			  public void run() {
+				try {
+					if(!socket.isClosed()) {
+						out.write(new String(PING).getBytes());
+						out.flush();
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+					connexionClosed();
+				}
+			  }
+		}, 2*1000, 2*1000);
+		
+		} catch (IOException e1) {
+			e1.printStackTrace();
+			connexionClosed();
+		}
 		notifyObserver(States.CONNECTE);
 	}
 
 	@Override
 	protected void send(String message) {
 		if(Running) {
-			writer.send(message);
-		}
+			try {
+				out.write(message.getBytes());
+				out.flush();
+				log("SENT: "+message+"\n");
+			} catch (SocketException e) {
+				e.printStackTrace();
+				connexionClosed();
+			}catch (IOException e) {
+				e.printStackTrace();
+			}
+		}	
 	}
 
 	@Override
@@ -88,10 +116,11 @@ public class SocketConnexion extends Connexion{
 				timer.cancel();
 				timer.purge();
 				listenerThread.join();
-				writerThread.join();
 			}
+			out.close();
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
+			notifyObserver(States.DECONNECTE);
 			return false;
 		}
 			notifyObserver(States.DECONNECTE);
@@ -139,6 +168,7 @@ public class SocketConnexion extends Connexion{
 						 }
 					stringBuffer = "";
 					}
+					delay();
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -159,57 +189,5 @@ public class SocketConnexion extends Connexion{
 				e.printStackTrace();
 			}
 		}	
-	}
-	
-		
-	
-	private class SocketWriter implements Runnable{
-		private volatile String buffer = "";
-		private BufferedOutputStream out;
-		@Override
-		public void run() {
-			try {
-				out = new BufferedOutputStream(socket.getOutputStream());
-				timer.scheduleAtFixedRate(new TimerTask() {
-					@Override
-					  public void run() {
-						try {
-							if(!socket.isClosed()) {
-								out.write(new String(PING).getBytes());
-								out.flush();
-							}
-						} catch (IOException e) {
-							e.printStackTrace();
-							connexionClosed();
-						}
-					  }
-				}, 2*1000, 2*1000);
-				while(Running) {
-					if(buffer!="") {
-						out.write(buffer.getBytes());
-						out.flush();
-						log("SENT: "+buffer+"\n");
-						buffer = "";
-					}
-				}	
-			
-			} catch (SocketException e) {
-				e.printStackTrace();
-				connexionClosed();
-			}catch (IOException e) {
-				e.printStackTrace();
-			}finally{
-				try {
-					out.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		
-		public void send(String message) {
-			buffer += message;
-		}
-
 	}
 }

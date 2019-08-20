@@ -45,8 +45,7 @@ public class ServerSocketConnexion extends SocketConnexion{
 				socket.close();
 				server.close();
 				listenerThread.join();
-				writerThread.join();
-				if(Running==false && socket.isClosed() && !listenerThread.isAlive() && !writerThread.isAlive()) {
+				if(Running==false && socket.isClosed() && !listenerThread.isAlive()) {
 					notifyObserver(States.DECONNECTE);
 					return true;
 				}

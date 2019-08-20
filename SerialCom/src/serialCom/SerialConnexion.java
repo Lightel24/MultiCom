@@ -10,7 +10,6 @@ public class SerialConnexion extends Connexion{
 
 	protected SerialPort portCom;
 	protected SerialListener listener;
-	protected SerialWriter writer;
 	
 	private String nom;
 	
@@ -50,17 +49,15 @@ public class SerialConnexion extends Connexion{
 		System.out.println("Initialisation du Writer et du Listener...");		
 		Running = true;
 		listener = new SerialListener();
-		writer = new SerialWriter();
 		listenerThread = new Thread(listener);
 		listenerThread.start();
 		
-		writerThread = new Thread(writer);
-		writerThread.start();
 		notifyObserver(States.CONNECTE);
 	}
 	
 	public void send(String message) {
-		writer.send(message);
+		portCom.writeBytes(message.getBytes(), message.getBytes().length);
+		log("SENT: "+message+"\n");
 	}
 
 	public boolean close() {
@@ -68,7 +65,6 @@ public class SerialConnexion extends Connexion{
 			Running = false;
 			try {
 				listenerThread.join();
-				writerThread.join();
 				notifyObserver(States.DECONNECTE);
 				return true;
 			} catch (InterruptedException e) {
@@ -117,6 +113,7 @@ public class SerialConnexion extends Connexion{
 						}
 					stringBuffer = "";
 					}
+				delay();
 			}
 		}
 
@@ -130,26 +127,5 @@ public class SerialConnexion extends Connexion{
 				e.printStackTrace();
 			}
 		}	
-	}
-	
-		
-	
-	private class SerialWriter implements Runnable{
-		private volatile String buffer = "";
-
-		@Override
-		public void run() {
-			while(Running) {
-				if(buffer!="") {
-					portCom.writeBytes(buffer.getBytes(), buffer.getBytes().length);
-					log("SENT: "+buffer+"\n");
-					buffer = "";
-				}
-			}	
-		}
-		
-		public void send(String message) {
-			buffer += message;
-		}
 	}
 }

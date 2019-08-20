@@ -18,7 +18,6 @@ public abstract class Connexion implements Observable{
 	protected ArrayList<Observer> observers = new ArrayList<Observer>();
 	protected String logs = "";
 	protected Thread listenerThread;
-	protected Thread writerThread;
 	protected boolean Running;
 	
 	protected abstract void send(String message);
@@ -36,6 +35,14 @@ public abstract class Connexion implements Observable{
 	protected abstract boolean close();
 
 	protected abstract boolean connect();
+
+	protected void delay() {
+        try {
+			Thread.sleep(200);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	public void addObserver(Observer ob) {
 		observers.add(ob);

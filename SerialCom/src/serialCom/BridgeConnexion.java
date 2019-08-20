@@ -19,7 +19,8 @@ public class BridgeConnexion extends Connexion {
 	protected Socket socket;
 	protected SerialBridge serialBridge;
 	protected SocketBridge socketBridge;
-	
+	protected Thread writerThread;
+
 	protected String adresse;
 	protected int port;
 	protected String nom;
@@ -153,7 +154,8 @@ public class BridgeConnexion extends Connexion {
 							//Ecriture dans le port série
 							portCom.writeBytes(b, stream);
 						 }
-					 } 
+					 }
+					 delay();
 				}
 			} catch (SocketTimeoutException e) {
 				e.printStackTrace();
@@ -202,7 +204,8 @@ public class BridgeConnexion extends Connexion {
 						//On écrit la socket
 						out.write(buffer);
 						out.flush();
-					}
+					}					 
+					delay();
 				}	
 			
 			} catch (IOException e) {
