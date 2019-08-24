@@ -11,6 +11,8 @@ import java.net.UnknownHostException;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import out.Settings;
+
 public class SocketConnexion extends Connexion{
 
 	protected SocketListener listener;
@@ -56,26 +58,27 @@ public class SocketConnexion extends Connexion{
 		
 		try {
 			out = new BufferedOutputStream(socket.getOutputStream());
-		
-		timer.scheduleAtFixedRate(new TimerTask() {
-			@Override
-			  public void run() {
-				try {
-					if(!socket.isClosed()) {
-						out.write(new String(PING).getBytes());
-						out.flush();
+		if(Settings.isPing()) {
+			timer.scheduleAtFixedRate(new TimerTask() {
+				@Override
+				  public void run() {
+					try {
+						if(!socket.isClosed()) {
+							out.write(new String(PING).getBytes());
+							out.flush();
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
+						connexionClosed();
 					}
-				} catch (IOException e) {
-					e.printStackTrace();
-					connexionClosed();
-				}
-			  }
-		}, 2*1000, 2*1000);
-		
-		} catch (IOException e1) {
-			e1.printStackTrace();
-			connexionClosed();
+				  }
+			}, 2*1000, 2*1000);
 		}
+			} catch (IOException e1) {
+				e1.printStackTrace();
+				connexionClosed();
+			}
+		
 		notifyObserver(States.CONNECTE);
 	}
 

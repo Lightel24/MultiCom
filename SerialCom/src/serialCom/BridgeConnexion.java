@@ -20,6 +20,7 @@ public class BridgeConnexion extends Connexion {
 	protected SerialBridge serialBridge;
 	protected SocketBridge socketBridge;
 	protected Thread writerThread;
+	protected BufferedOutputStream out;
 
 	protected String adresse;
 	protected int port;
@@ -75,6 +76,25 @@ public class BridgeConnexion extends Connexion {
 		System.out.println("Initialisation du Writer et du Listener...");		
 		Running = true;
 		timer = new Timer();
+		try {
+			out = new BufferedOutputStream(socket.getOutputStream());
+			timer.scheduleAtFixedRate(new TimerTask() {
+				@Override
+				  public void run() {
+					try {
+						if(!socket.isClosed()) {
+							out.write(new String(PING).getBytes());
+							out.flush();
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
+						connexionClosed();
+					}
+				  }
+			}, 2*1000, 2*1000);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 		serialBridge = new SerialBridge();
 		socketBridge = new SocketBridge();
 		listenerThread = new Thread(serialBridge);
@@ -175,26 +195,9 @@ public class BridgeConnexion extends Connexion {
 		
 	
 	private class SerialBridge implements Runnable{
-		private BufferedOutputStream out;
 		@Override
 		public void run() {
-			try {
-				out = new BufferedOutputStream(socket.getOutputStream());
-				timer.scheduleAtFixedRate(new TimerTask() {
-					@Override
-					  public void run() {
-						try {
-							if(!socket.isClosed()) {
-								out.write(new String(PING).getBytes());
-								out.flush();
-							}
-						} catch (IOException e) {
-							e.printStackTrace();
-							connexionClosed();
-						}
-					  }
-				}, 2*1000, 2*1000);
-				
+			try {				
 				while(Running) {
 					if(portCom.bytesAvailable()>1) {
 						//On lit le port série
