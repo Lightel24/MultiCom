@@ -2,8 +2,9 @@ package serialCom;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
-import main.Fenetre;
+
 import serialCom.Connexion.States;
+import ui.Fenetre;
 
 
 public class SerialConnexion extends Connexion{

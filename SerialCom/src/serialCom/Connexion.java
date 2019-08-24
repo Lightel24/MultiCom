@@ -2,9 +2,9 @@ package serialCom;
 
 import java.util.ArrayList;
 
-import main.Fenetre;
 import observer.Observable;
 import observer.Observer;
+import ui.Fenetre;
 
 
 public abstract class Connexion implements Observable{

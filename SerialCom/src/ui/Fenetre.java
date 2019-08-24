@@ -1,4 +1,4 @@
-package main;
+package ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -69,6 +69,7 @@ public class Fenetre extends JFrame implements Observer{
 	private JMenuItem JMIaddSocket = new JMenuItem("Un client socket");
 	private JMenuItem JMIaddServerSocket = new JMenuItem("Un serveur socket");
 	private JMenuItem JMIcredit = new JMenuItem("Credit");
+	private Parametres parametreDialog;
 	
 	public ConnexionKey currentConnection;
 	private boolean autoScroll = false;
@@ -89,7 +90,6 @@ public class Fenetre extends JFrame implements Observer{
 		}
 
 //		ports = new String[]{"COM3","COM4"};	//DEBUG
-			
 		ref = this;
 		this.setTitle("MultiCom");
 		this.setBounds(100, 100, 972, 517);
@@ -204,7 +204,8 @@ public class Fenetre extends JFrame implements Observer{
 		JMIparam.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				//optionMenu opt = new optionMenu();
+				parametreDialog = new Parametres(ref);
+				parametreDialog.setVisible(true);
 			}
 			
 		});
