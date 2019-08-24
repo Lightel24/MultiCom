@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import observer.Observable;
 import observer.Observer;
+import out.Settings;
 import ui.Fenetre;
 
 
@@ -38,7 +39,7 @@ public abstract class Connexion implements Observable{
 
 	protected void delay() {
         try {
-			Thread.sleep(200);
+			Thread.sleep(Settings.getDelay());
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
