@@ -3,15 +3,13 @@ package main;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import out.Settings;
+import ui.Fenetre;
+
 public class Main {
 	
 	public static void main(String[] args) {
+		Settings.checkSettings();
 		Fenetre fenetre = new Fenetre();
-   /*     try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
-				| UnsupportedLookAndFeelException e) {
-			e.printStackTrace();
-		}*/
 	}	
 }
